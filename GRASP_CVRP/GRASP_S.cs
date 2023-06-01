@@ -62,7 +62,7 @@ public class GRASP_S
         {
             while (iteration % Petalacceptance != 0)
             {
-                SolutionGRASP incumbent = new SolutionGRASP(Constructions.GRASPcheapestinsertion(ref rnd, Capacity, RCL_Length, Points, distancematrix));//build solution
+                SolutionGRASP incumbent = new SolutionGRASP(Constructions.GRASPcheapestinsertion(ref rnd, Capacity, RCL_Length, Points, distancematrix, Selection_pref));//build solution
                 SolutionGRASP incumbent_afterLS = LocalSearch(incumbent);
                 //acceptance criteria
 
