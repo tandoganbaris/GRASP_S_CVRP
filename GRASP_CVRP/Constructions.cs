@@ -28,7 +28,13 @@ public static class Constructions
             output.Add(CheapestinsertionGRASP(ref rnd, RCLlength, ref pointsremaining, depot, capacity, dmatrix, selectpref));
         }
 
-
+        foreach (Tour t in output)
+        {
+            t.Initialnodes = points.ToList();
+            t.Capacity = capacity;
+            t.distancematrix = dmatrix;
+            // t.Refresh();
+        }
         return output;
     }
 
@@ -46,33 +52,37 @@ public static class Constructions
         while (!returntour)
         {
             //construct RCL
+            if (remainingpoints.Count == 0) { returntour = true; break; }
             Dictionary<double, List<Tuple<POINT, int>>> RCL = RCList(result, ref rnd, RCLlenght, dmatrix);
 
             //choose point
             double choice = rnd.NextDouble();
             int index = 0;
             POINT chosen = Choose(choice, RCL, out index, selectpref);
+            double solodistance = dmatrix[depot.ID - 1, chosen.ID - 1] * 2; //if the node was a tour on its own
+            double inserteddistance = dmatrix[result.Visitednodes[index].ID - 1, chosen.ID - 1] + //gives the added distance
+                dmatrix[result.Visitednodes[index + 1].ID - 1, chosen.ID - 1] -
+                dmatrix[result.Visitednodes[index].ID - 1, result.Visitednodes[index + 1].ID - 1];
 
-            while (result.Tourload + chosen.Demand > capacity)
+            while ((result.Tourload + chosen.Demand > capacity) || (solodistance < inserteddistance))
             {//choose new
                 double newchoice = rnd.NextDouble();
                 int newindex = 0;
                 chosen = Choose(newchoice, RCL, out newindex, selectpref);
                 nofit_iteration++;
+                solodistance = dmatrix[depot.ID - 1, chosen.ID - 1] * 2; //if the node was a tour on its own
+                inserteddistance = dmatrix[result.Visitednodes[index].ID - 1, chosen.ID - 1] + //gives the added distance
+                    dmatrix[result.Visitednodes[index + 1].ID - 1, chosen.ID - 1] -
+                    dmatrix[result.Visitednodes[index].ID - 1, result.Visitednodes[index + 1].ID - 1];
                 if (nofit_iteration == maxnofit) { returntour = true; break; }
             }
-            result.Visitednodes.Insert(index+1, chosen);
+            if (returntour) { break; }
+            result.Visitednodes.Insert(index + 1, chosen);
             result.Unvisitednodes.Remove(chosen);
             remainingpoints.Remove(chosen);
 
 
         }
-        //while (result.Tourload < capacity)
-        //{
-        //    POINT pointtoinsert = Cheapestpoint(result, out int insertionindex); //ask about the out int index
-        //    result.Visitednodes.Insert(insertionindex + 1, pointtoinsert); //insertion always pushes the existing value further in the list, we dont want to push the value at index but insert after it, therefore index+1
-        //    result.Unvisitednodes.Remove(pointtoinsert);
-        //}
 
         return result;
 
@@ -82,24 +92,37 @@ public static class Constructions
         POINT output = new POINT();
         index = 0;
         double key_cum = 0;
+        double choiceinternal = 0;
         Dictionary<double, List<Tuple<POINT, int>>> RCL_norm = new Dictionary<double, List<Tuple<POINT, int>>>();
-        foreach (double key in RCL.Keys)
+        if (RCL.Keys.Count > 1)
         {
-            key_cum += (Math.Pow((10 / key), selectpref)) * 1000;
-            RCL_norm[key_cum] = RCL[key];
-
-        }
-
-        for (int i = 0; i < RCL_norm.Keys.Count - 1; i++)
-        {
-            if (RCL_norm.ElementAt(i + 1).Key > choice)
+            for (int i = 0; i < RCL.Keys.Count; i++)
             {
-                output = RCL_norm.ElementAt(i).Value.First().Item1 as POINT;
-                index = RCL_norm.ElementAt(i).Value.First().Item2;
+                key_cum += (Math.Pow((10 / (RCL.ElementAt(i).Key+10)), selectpref)) * 100;
+                RCL_norm[key_cum] = RCL[RCL.ElementAt(i).Key];
+              
             }
+            choiceinternal = choice * RCL_norm.Keys.Last(); //where the random double works on the range of tournament
+            for (int i = 0; i < RCL_norm.Keys.Count - 1; i++)
+            {
+                if (RCL_norm.ElementAt(i+1).Key> choiceinternal)
+                {
+                        output = RCL_norm.ElementAt(i).Value.First().Item1 as POINT;
+                        index = RCL_norm.ElementAt(i).Value.First().Item2;
+                        break;                   
+                }
 
+            }
         }
-
+        else
+        {
+            output = RCL.First().Value.First().Item1 as POINT;
+            index = RCL.First().Value.First().Item2;
+        }
+        if (output.Demand == 0 && output.ID == 0)
+        {
+            string here = string.Empty;
+        }
         return output;
     }
     public static Dictionary<double, List<Tuple<POINT, int>>> RCList(Tour tour, ref Random rnd, int RCLlength, double[,] dmatrix)
@@ -109,23 +132,24 @@ public static class Constructions
         {
             POINT before = tour.Visitednodes[i];
             POINT after = tour.Visitednodes[i + 1];
-            double distanceintour = dmatrix[before.ID, after.ID];
+            double distanceintour = dmatrix[before.ID - 1, after.ID - 1];
             POINT pointtoinsert = new POINT();
             double distance1 = 0;
             double distance2 = 0;
             for (int j = 0; j < tour.Unvisitednodes.Count; j++) //find the cheapest point to insert for each index
             {
                 pointtoinsert = tour.Unvisitednodes[j];
-                distance1 = dmatrix[before.ID, pointtoinsert.ID];
-                distance2 = dmatrix[pointtoinsert.ID, after.ID];
+                distance1 = dmatrix[before.ID - 1, pointtoinsert.ID - 1];
+                distance2 = dmatrix[pointtoinsert.ID - 1, after.ID - 1];
                 double insertioncost = distance1 + distance2 - distanceintour;
-                output.Add(insertioncost, new List<Tuple<POINT, int>> { new Tuple<POINT, int>(pointtoinsert, i) });
+                if (!output.Keys.Contains(insertioncost)) { output.Add(insertioncost, new List<Tuple<POINT, int>> { new Tuple<POINT, int>(pointtoinsert, i) }); }
+                else { output[insertioncost].Add(new Tuple<POINT, int>(pointtoinsert, i)); }
 
             }
         }
         Dictionary<double, List<Tuple<POINT, int>>> output2 = output.OrderBy(x => x.Key)
                                                                      .Take(RCLlength)
-                                                                     .ToDictionary(x => x.Key, x => x.Value);   
+                                                                     .ToDictionary(x => x.Key, x => x.Value);
         return output2;
 
     }

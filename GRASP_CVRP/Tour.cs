@@ -9,7 +9,7 @@ namespace GRASP_CVRP;
 
 
 
-public class Tour
+public class Tour :ICloneable
 {
     public List<POINT> Visitednodes { get; set; } = new List<POINT>();
     public List<POINT> Unvisitednodes { get; set; } = new List<POINT>();
@@ -19,7 +19,7 @@ public class Tour
 
     public double Fitness { get { double d = Math.Pow((10 / Distance), 2); return d; } set { } } //note that the power here is to amplify differences between good tours and bad tours 
 
-
+    public List<string> Log { get; set; } = new List<string>();
     public double Tourload
     {
         get
@@ -59,6 +59,7 @@ public class Tour
         }
         set { }
     }
+    public double Capacity { get; set; }
 
     public double[,] distancematrix
     {
@@ -115,6 +116,7 @@ public class Tour
         }
         Unvisitednodes = points.ToList();
         Initialnodes = points.ToList();
+        
 
 
     }
@@ -136,11 +138,15 @@ public class Tour
     public double Distancecalc() //if the depot exists twice, once in the beginning once in the end
     {
         double distance = 0;
-        for (int i = 0; i < Visitednodes.Count - 1; i++)//count 49 for 48 nodes. at the end i=47(visitednodes[47]) to i=48 (visitednodes[48])(node 49), visitednodes starts from 0
+        try
         {
-            //distance += constructions.Euclideandistance(Visitednodes[i], Visitednodes[i + 1]);
-            distance += distancematrix[Visitednodes[i].ID, Visitednodes[i + 1].ID];
+            for (int i = 0; i < Visitednodes.Count - 1; i++)//count 49 for 48 nodes. at the end i=47(visitednodes[47]) to i=48 (visitednodes[48])(node 49), visitednodes starts from 0
+            {
+                //distance += constructions.Euclideandistance(Visitednodes[i], Visitednodes[i + 1]);
+                distance += distancematrix[Visitednodes[i].ID - 1, Visitednodes[i + 1].ID - 1];
+            }
         }
+        catch(Exception e) { Log.Add("Distance Calculation Error: " + e.Message); }
         Distance = distance;
         return distance;
 
@@ -152,10 +158,10 @@ public class Tour
         for (int i = 0; i < Visitednodes.Count - 1; i++)//count 48 for 48 nodes. at the end i=46(visitednodes[46]) to i=47 (visitednodes[47]), visitednodes starts from 0
         {
             //distance += constructions.Euclideandistance(Visitednodes[i], Visitednodes[i + 1]);
-            distance += distancematrix[Visitednodes[i].ID, Visitednodes[i + 1].ID];
+            distance += distancematrix[Visitednodes[i].ID-1, Visitednodes[i + 1].ID-1];
         }
         //distance += constructions.Euclideandistance(Visitednodes[0], Visitednodes.Last()); //connect last to depot
-        distance += distancematrix[Visitednodes[0].ID, Visitednodes.Last().ID];
+        distance += distancematrix[Visitednodes[0].ID - 1, Visitednodes.Last().ID-1];
 
         return distance;
 
@@ -179,22 +185,26 @@ public class Tour
 
         //MATRIX REFRESH
       
-        if (Visitednodes.Count > 0)
-        {
-            double[,] dmatrix = new double[Visitednodes.Count, Visitednodes.Count];
-            for (int i = 0; i < Visitednodes.Count; i++)
-            {  
-                for (int j = 0; j < Visitednodes.Count; j++)
-                {
-                    dmatrix[i, j] = Constructions.Euclideandistance(Visitednodes[i], Visitednodes[j]);
-                }
-            }
-            distancematrix = dmatrix;
+        //if (Visitednodes.Count > 0)
+        //{
+        //    double[,] dmatrix = new double[Visitednodes.Count, Visitednodes.Count];
+        //    for (int i = 0; i < Visitednodes.Count; i++)
+        //    {  
+        //        for (int j = 0; j < Visitednodes.Count; j++)
+        //        {
+        //            dmatrix[i, j] = Constructions.Euclideandistance(Visitednodes[i], Visitednodes[j]);
+        //        }
+        //    }
+        //    distancematrix = dmatrix;
 
-        }
-        else { double[,] matrix = new double[1, 1]; distancematrix = matrix; }
+        //}
+        //else { double[,] matrix = new double[1, 1]; distancematrix = matrix; }
 
         return;
+    }
+    public object Clone()
+    {
+        return this.MemberwiseClone();
     }
 
 }
