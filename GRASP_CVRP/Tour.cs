@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace GRASP_CVRP;
 
 
 
 
-public class Tour :ICloneable
+public class Tour : ICloneable
 {
     public List<POINT> Visitednodes { get; set; } = new List<POINT>();
     public List<POINT> Unvisitednodes { get; set; } = new List<POINT>();
@@ -61,33 +62,8 @@ public class Tour :ICloneable
     }
     public double Capacity { get; set; }
 
-    public double[,] distancematrix
-    {
-        get
-        {
+    public double[,] distancematrix { get; set; }
 
-            
-                double[,] dmatrix = new double[Initialnodes.Count, Initialnodes.Count];
-                for (int i = 0; i < Initialnodes.Count; i++)
-                {
-                    for (int j = 0; j < Initialnodes.Count; j++)
-                    {
-                        dmatrix[i, j] = Constructions.Euclideandistance(Initialnodes[i], Initialnodes[j]);
-                    }
-                }
-                return dmatrix;
-
-         
-           
-
-
-        }
-        set { }
-
-
-
-
-    }
     public double Distance //distance is calculated depending on the visitednodes
     {
         get
@@ -104,7 +80,15 @@ public class Tour :ICloneable
         set { }
     }
     public double PetalParameter //the higher the better
-    { get { double output = Tourload / Distance; return output; } set { } }
+    {
+        get
+        {
+            double output = 0;
+            output += Math.Pow((100 / Distance), 2.5)*100 - Math.Pow((Capacity-Tourload), 2);
+            return output;
+        }
+        set { }
+    }
 
     public Tour(List<POINT> points)
     {
@@ -116,7 +100,7 @@ public class Tour :ICloneable
         }
         Unvisitednodes = points.ToList();
         Initialnodes = points.ToList();
-        
+
 
 
     }
@@ -146,22 +130,22 @@ public class Tour :ICloneable
                 distance += distancematrix[Visitednodes[i].ID - 1, Visitednodes[i + 1].ID - 1];
             }
         }
-        catch(Exception e) { Log.Add("Distance Calculation Error: " + e.Message); }
+        catch (Exception e) { Log.Add("Distance Calculation Error: " + e.Message); }
         Distance = distance;
         return distance;
 
     }
     public double Distancecalc_Onedepotinlist() //if the depot exists once
     {
-        
+
         double distance = 0;
         for (int i = 0; i < Visitednodes.Count - 1; i++)//count 48 for 48 nodes. at the end i=46(visitednodes[46]) to i=47 (visitednodes[47]), visitednodes starts from 0
         {
             //distance += constructions.Euclideandistance(Visitednodes[i], Visitednodes[i + 1]);
-            distance += distancematrix[Visitednodes[i].ID-1, Visitednodes[i + 1].ID-1];
+            distance += distancematrix[Visitednodes[i].ID - 1, Visitednodes[i + 1].ID - 1];
         }
         //distance += constructions.Euclideandistance(Visitednodes[0], Visitednodes.Last()); //connect last to depot
-        distance += distancematrix[Visitednodes[0].ID - 1, Visitednodes.Last().ID-1];
+        distance += distancematrix[Visitednodes[0].ID - 1, Visitednodes.Last().ID - 1];
 
         return distance;
 
@@ -184,7 +168,7 @@ public class Tour :ICloneable
         Tourload = load;
 
         //MATRIX REFRESH
-      
+
         //if (Visitednodes.Count > 0)
         //{
         //    double[,] dmatrix = new double[Visitednodes.Count, Visitednodes.Count];
@@ -233,7 +217,13 @@ public class SolutionGRASP
     {
         Petals = input.ToList();
     }
-   
+    public override string ToString()
+    {
+        string output = $"totaldistance: {Totaldist} ; No tours: {Petals.Count}";
+
+        return output;
+    }
+
 }
 
 

@@ -31,9 +31,8 @@ public static class Constructions
         foreach (Tour t in output)
         {
             t.Initialnodes = points.ToList();
-            t.Capacity = capacity;
-            t.distancematrix = dmatrix;
-            // t.Refresh();
+            t.Capacity = capacity;         
+            //t.Refresh();
         }
         return output;
     }
@@ -44,6 +43,7 @@ public static class Constructions
         int maxnofit = (int)(RCLlenght / 2.0);
         bool returntour = false;
         Tour result = new Tour();
+        result.distancematrix = dmatrix;
         result.Visitednodes.Add(depot);
         result.Visitednodes.Add(depot);
         result.Unvisitednodes.AddRange(remainingpoints);

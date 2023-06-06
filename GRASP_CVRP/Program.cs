@@ -17,31 +17,33 @@ class Program
         //@"C:\classes\ws22-23\vigo\E-n51-k5.vrp"; //enter your filepath
 
         SortedList<double, List<Tour>> results = new SortedList<double, List<Tour>>();
+        List<double> averagelist = new List<double>();
+        double bestval = double.MaxValue;
 
-        for (int k = 0; k < 1; k++)
+        for (int k = 0; k < 150; k++)
         {
             FileHandler fileHandler = new FileHandler(path, string.Empty);
             //Console.WriteLine(fileHandler.Plist.Count);
             List<POINT> points = fileHandler.Plist.ToList();
             GRASP_S graspalgo = new GRASP_S(points, fileHandler.Maxcap);
             graspalgo.Mainalgo();
-            //List<POINT> inputtest = fileHandler.Plist.ToList();
-
-
-
-        }
-        double avg = 0;
-        foreach (double key in results.Keys)
-        {
-            avg += key;
-            Console.Write($"[{results.IndexOfKey(key)}] Total_Dist: " + key + "\n");
-            foreach (Tour t in results[key])
+            double outputval = graspalgo.Finalsolution.Totaldist;
+            Console.WriteLine($"the value is {outputval}");
+            averagelist.Add(outputval);
+            if (outputval < bestval)
             {
-                Console.WriteLine((results[key].IndexOf(t) + 1).ToString() + " " + t);
+                bestval = outputval;
+
             }
+            //List<POINT> inputtest = fileHandler.Plist.ToList();
+            graspalgo.Resetall();
+
+
+
 
         }
-        Console.WriteLine($"Average Distance in this round: {avg / results.Keys.Count}");
+        Console.WriteLine($"The average is {averagelist.Average()} ; the best ist {bestval}");
+
 
 
     }
