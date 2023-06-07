@@ -13,13 +13,13 @@ namespace GRASP_CVRP;
 public class GRASP_S
 {
     public bool LocalSearchSwitch { get; set; } = true;
-    public bool PetalUse { get; set; } = false;
+    public bool PetalUse { get; set; } = true;
     public int Selection_pref { get; set; } = 3;
 
 
 
 
-    public int RCL_Length { get; set; } = 10;
+    public int RCL_Length { get; set; } =5;
     public List<POINT> Points = new List<POINT>();
     public List<POINT> InitialPoints = new List<POINT>();
     public int Capacity { get; set; } = 0; //each vehicle Cap

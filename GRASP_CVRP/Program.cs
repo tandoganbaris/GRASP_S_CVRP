@@ -12,7 +12,8 @@ class Program
 {
     private static void Main(string[] args)
     {
-        string path = @"C:\classes\ws22-23\vigo\E-n51-k5.vrp";
+        string path = @"C:\classes\ws22-23\vigo\vrp\P\P-n20-k2.vrp";
+
         //@"C:\classes\ws22-23\vigo\vrp\M\M-n101-k10.vrp";
         //@"C:\classes\ws22-23\vigo\E-n51-k5.vrp"; //enter your filepath
 
@@ -20,7 +21,7 @@ class Program
         List<double> averagelist = new List<double>();
         double bestval = double.MaxValue;
 
-        for (int k = 0; k < 150; k++)
+        for (int k = 0; k < 500; k++)
         {
             FileHandler fileHandler = new FileHandler(path, string.Empty);
             //Console.WriteLine(fileHandler.Plist.Count);
